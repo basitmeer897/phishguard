@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phishing URL Detection System</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2.5"/>
+          <path d="M24 10 L30 20 L38 22 L32 30 L33 38 L24 34 L15 38 L16 30 L10 22 L18 20 Z"
+                fill="currentColor" opacity="0.15"/>
+          <path d="M24 10 L30 20 L38 22 L32 30 L33 38 L24 34 L15 38 L16 30 L10 22 L18 20 Z"
+                stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <circle cx="24" cy="24" r="4" fill="currentColor"/>
+        </svg>
+        <span class="logo-text">PhishGuard</span>
+      </div>
+      <nav class="nav-links">
+        <span class="nav-badge" id="modelBadge">Model: Loading…</span>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Detect Phishing URLs
+        <span class="highlight">Instantly</span>
+      </h1>
+      <p class="hero-sub">
+        Dual-engine analysis: Machine Learning + Live Security Assessment.
+        Paste any URL below and get a full threat report in seconds.
+      </p>
+
+      <!-- URL Input -->
+      <div class="url-form">
+        <div class="input-wrap" id="inputWrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07L11.75 5.5"/>
+            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07L10.25 18.5"/>
+          </svg>
+          <input
+            type="text"
+            id="urlInput"
+            class="url-input"
+            placeholder="https://example.com/path?query=value"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="clear-btn" id="clearBtn" title="Clear">✕</button>
+        </div>
+        <button class="analyze-btn" id="analyzeBtn">
+          <span class="btn-text">Analyze URL</span>
+          <span class="btn-spinner hidden" id="btnSpinner"></span>
+        </button>
+      </div>
+
+      <!-- Example URLs -->
+      <div class="examples">
+        <span class="ex-label">Try examples:</span>
+        <button class="ex-pill" data-url="https://www.google.com">google.com</button>
+        <button class="ex-pill" data-url="http://secure-login-paypal.tk/verify/account">paypal fake</button>
+        <button class="ex-pill" data-url="https://github.com">github.com</button>
+        <button class="ex-pill" data-url="http://192.168.1.1/phish/login.php">IP phish</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <main class="results-area hidden" id="resultsArea">
+
+    <!-- Overall Verdict Banner -->
+    <div class="verdict-banner" id="verdictBanner">
+      <div class="verdict-inner">
+        <div class="verdict-icon-wrap" id="verdictIconWrap">
+          <svg class="verdict-icon" id="verdictIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"></svg>
+        </div>
+        <div class="verdict-info">
+          <div class="verdict-label" id="verdictLabel">PHISHING</div>
+          <div class="verdict-url" id="verdictUrl"></div>
+        </div>
+        <div class="verdict-meta">
+          <div class="verdict-time" id="verdictTime"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-grid">
+
+      <!-- ML Card -->
+      <div class="card ml-card">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+            <path d="M7 8l3 3 2-2 3 3"/>
+          </svg>
+          <h2>Machine Learning Analysis</h2>
+        </div>
+        <div class="card-body">
+          <div class="ml-verdict-row">
+            <span class="ml-verdict-label" id="mlVerdict">—</span>
+            <span class="ml-model-name" id="mlModelName"></span>
+          </div>
+
+          <!-- Confidence Gauge -->
+          <div class="gauge-wrap">
+            <div class="gauge-labels">
+              <span>Legitimate</span>
+              <span>Phishing</span>
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill" id="gaugeFill" style="width:0%"></div>
+            </div>
+            <div class="gauge-pct" id="gaugePct">0%</div>
+            <div class="gauge-sub">Phishing probability</div>
+          </div>
+
+          <!-- Prob circles -->
+          <div class="prob-circles">
+            <div class="prob-circle safe">
+              <div class="prob-val" id="probLegit">0%</div>
+              <div class="prob-lbl">Legitimate</div>
+            </div>
+            <div class="prob-circle danger">
+              <div class="prob-val" id="probPhish">0%</div>
+              <div class="prob-lbl">Phishing</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Card -->
+      <div class="card sec-card">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <h2>Security Assessment</h2>
+        </div>
+        <div class="card-body">
+
+          <!-- Risk Score -->
+          <div class="risk-row">
+            <div class="risk-meter" id="riskMeter">
+              <div class="risk-dot" id="riskDot"></div>
+            </div>
+            <div class="risk-info">
+              <div class="risk-score" id="riskScore">0 risk flags</div>
+              <div class="risk-label" id="riskLabel">Low Risk</div>
+            </div>
+          </div>
+
+          <!-- Checks Grid -->
+          <div class="checks-grid">
+            <div class="check-item" id="checkDNS">
+              <div class="check-icon"></div>
+              <div class="check-label">DNS Records</div>
+              <div class="check-val" id="checkDNSVal">—</div>
+            </div>
+            <div class="check-item" id="checkSSL">
+              <div class="check-icon"></div>
+              <div class="check-label">SSL / TLS</div>
+              <div class="check-val" id="checkSSLVal">—</div>
+            </div>
+            <div class="check-item" id="checkHTTPS">
+              <div class="check-icon"></div>
+              <div class="check-label">HTTPS</div>
+              <div class="check-val" id="checkHTTPSVal">—</div>
+            </div>
+            <div class="check-item" id="checkRedirect">
+              <div class="check-icon"></div>
+              <div class="check-label">Redirects</div>
+              <div class="check-val" id="checkRedirectVal">—</div>
+            </div>
+            <div class="check-item" id="checkPhishtank">
+              <div class="check-icon"></div>
+              <div class="check-label">PhishTank DB</div>
+              <div class="check-val" id="checkPhishtankVal">—</div>
+            </div>
+            <div class="check-item" id="checkDomain">
+              <div class="check-icon"></div>
+              <div class="check-label">Domain</div>
+              <div class="check-val" id="checkDomainVal">—</div>
+            </div>
+          </div>
+
+          <!-- Risk Flags -->
+          <div class="flags-wrap" id="flagsWrap" style="display:none">
+            <div class="flags-title">⚠ Risk Flags Detected</div>
+            <ul class="flags-list" id="flagsList"></ul>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- URL Features Card -->
+      <div class="card features-card">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <h2>URL Feature Analysis</h2>
+        </div>
+        <div class="card-body">
+          <div class="features-table-wrap">
+            <table class="features-table" id="featuresTable">
+              <thead>
+                <tr><th>Feature</th><th>Value</th><th>Assessment</th></tr>
+              </thead>
+              <tbody id="featuresBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendation Card -->
+      <div class="card rec-card">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <h2>Recommendation</h2>
+        </div>
+        <div class="card-body rec-body" id="recBody">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+    </div><!-- /results-grid -->
+  </main>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay hidden" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="loading-spinner"></div>
+      <div class="loading-steps">
+        <div class="loading-step active" id="lstep1">🔗 Parsing URL structure…</div>
+        <div class="loading-step" id="lstep2">🤖 Running ML analysis…</div>
+        <div class="loading-step" id="lstep3">🔍 Checking DNS records…</div>
+        <div class="loading-step" id="lstep4">🔒 Inspecting SSL/TLS…</div>
+        <div class="loading-step" id="lstep5">🛡 Checking reputation…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Phishing URL Detection System · University Project · Data Science & Vulnerability Assessment</p>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
+
